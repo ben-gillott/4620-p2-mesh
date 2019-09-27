@@ -11,7 +11,7 @@ import math.Vector3;
  *  - Generating vertex normals for existing mesh geometry
  *  
  * @author ers273, xd93, srm
- * @author Your Name Here
+ * @author Ben Gillott, Pippen Wu
  */
 
 class MeshGen {
@@ -34,9 +34,190 @@ class MeshGen {
 		// TODO:
 		// Calculate Vertices (positions, uvs, and normals )
 		// Calculate indices in faces (use OBJFace class)
+		
+		float degrees = 360.0f / divisions;
+		float radians = (float)Math.toRadians(90);
+		float radians_incr = (float)Math.toRadians(degrees);
+		float u = 0;
+		float u_incr = 1f / divisions;
+		
+		outputMesh.positions.add(new Vector3(0,1,0));
+		outputMesh.positions.add(new Vector3(0,-1,0));
+		outputMesh.uvs.add(new Vector2(0.75f,0.75f));
+		outputMesh.uvs.add(new Vector2(0.25f,0.75f));
+		outputMesh.normals.add(new Vector3 (0,1,0));
+		outputMesh.normals.add(new Vector3 (0,-1,0));
+		
+		for (int i = 0; i < divisions; i++){
+			float sinValue = (float)Math.sin(radians);
+			float cosValue = (float)Math.cos(radians);
+			radians += radians_incr;
+			
+			// vertices
+			math.Vector3 v_pos = new Vector3(cosValue, 1.0f, sinValue);
+			//System.out.println(v_pos.toString());
+			outputMesh.positions.add(v_pos);
+			math.Vector3 v_neg = new Vector3(cosValue, -1.0f, sinValue);
+			//System.out.println(v_neg.toString());
+			outputMesh.positions.add(v_neg);
+			
+			// uvs
+			outputMesh.uvs.add(new Vector2(0.75f + cosValue/4, 0.75f + sinValue/4));
+			outputMesh.uvs.add(new Vector2(0.25f + cosValue/4, 0.75f + sinValue/4));
+			
+			// normals
+			outputMesh.normals.add(new Vector3(cosValue, 0, sinValue).normalize());
+		}
+		
+		if (divisions%2==0){
+			for (int i = 0; i < divisions/2; i++){
+				outputMesh.uvs.add(2*divisions+2, new Vector2(0.5f+u_incr+u, 0.5f));
+				outputMesh.uvs.add(2*divisions+3, new Vector2(0.5f+u_incr+u, 0));
+				u += u_incr;
+			}
+			
+			u = 0;
+			
+			for (int i = 0; i <= divisions/2; i++){
+				outputMesh.uvs.add(2*divisions+2, new Vector2(u, 0.5f));
+				outputMesh.uvs.add(2*divisions+3, new Vector2(u, 0));
+				u += u_incr;
+			}
+		}else{
+			for (int i = 0; i < (divisions+1)/2; i++){
+				outputMesh.uvs.add(2*divisions+2, new Vector2(0.5f+u_incr/2+u, 0.5f));
+				outputMesh.uvs.add(2*divisions+3, new Vector2(0.5f+u_incr/2+u, 0));
+				u += u_incr;
+			}
+			
+			u = 0;
+			
+			for (int i = 0; i < (divisions+1)/2; i++){
+				outputMesh.uvs.add(2*divisions+2, new Vector2(u, 0.5f));
+				outputMesh.uvs.add(2*divisions+3, new Vector2(u, 0));
+				u += u_incr;
+			}
+		}
+		
+		// cap faces
+				for (int i = 1 ; i < divisions ; i++){
+					OBJFace f = new OBJFace(3,true,true);
+					OBJFace.indexBase = 1;
+					f.setVertex(2, 1, 1, 1);
+					f.setVertex(1, (2*i)+1, (2*i)+1, 1);
+					f.setVertex(0, (2*i)+3, (2*i)+3, 1);
+					outputMesh.faces.add(f);
+					
+					OBJFace f2 = new OBJFace(3,true,true);
+					OBJFace.indexBase = 1;
+					f2.setVertex(0, 2, 2, 2);
+					f2.setVertex(1, (2*i)+2, (2*i)+2, 2);
+					f2.setVertex(2, (2*i)+4, (2*i)+4, 2);
+					outputMesh.faces.add(f2);
+				}
+				
+				OBJFace f = new OBJFace(3,true,true);
+				OBJFace.indexBase = 1;
+				f.setVertex(2, 1, 1, 1);
+				f.setVertex(1, (2*divisions)+1, (2*divisions)+1, 1);
+				f.setVertex(0, 3, 3, 1);
+				outputMesh.faces.add(f);
+				
+				OBJFace f2 = new OBJFace(3,true,true);
+				OBJFace.indexBase = 1;
+				f2.setVertex(0, 2, 2, 2);
+				f2.setVertex(1, (2*divisions)+2, (2*divisions)+2, 2);
+				f2.setVertex(2, 4, 4, 2);
+				outputMesh.faces.add(f2);
+				
+				// side facing faces
+				
+				int wrap;
+				
+				if (divisions%2==0){
+					wrap = (divisions-2)/2;
+				}else{
+					wrap = (divisions-1)/2;
+				}
+				
+				int count = 0;
+				
+				if (divisions%2 ==0){
+					for (int i = 1 ; i < divisions ; i++){
+
+						f = new OBJFace(3,true,true);
+						OBJFace.indexBase = 1;
+						f.setVertex(2, (2*i)+1, vertexToUV((2*i)+1,divisions, count>wrap), vertexToNormal((2*i)+1));
+						f.setVertex(1, (2*i)+2, vertexToUV((2*i)+2,divisions, count>wrap), vertexToNormal((2*i)+2));
+						f.setVertex(0, (2*i)+3, vertexToUV((2*i)+3,divisions, count>wrap), vertexToNormal((2*i)+3));
+						outputMesh.faces.add(f);
+
+						f2 = new OBJFace(3,true,true);
+						OBJFace.indexBase = 1;
+						f2.setVertex(2, (2*i)+3, vertexToUV((2*i)+3,divisions, count>wrap), vertexToNormal((2*i)+3));
+						f2.setVertex(1, (2*i)+2, vertexToUV((2*i)+2,divisions, count>wrap), vertexToNormal((2*i)+2));
+						f2.setVertex(0, (2*i)+4, vertexToUV((2*i)+4,divisions, count>wrap), vertexToNormal((2*i)+4));
+						outputMesh.faces.add(f2);
+
+						count++;
+
+					}
+				}else{
+					for (int i = 1 ; i < divisions ; i++){
+
+						f = new OBJFace(3,true,true);
+						OBJFace.indexBase = 1;
+						f.setVertex(2, (2*i)+1, vertexToUV((2*i)+1,divisions, count>=wrap), vertexToNormal((2*i)+1));
+						f.setVertex(1, (2*i)+2, vertexToUV((2*i)+2,divisions, count>=wrap), vertexToNormal((2*i)+2));
+						f.setVertex(0, (2*i)+3, vertexToUV((2*i)+3,divisions, count>=wrap), vertexToNormal((2*i)+3));
+						outputMesh.faces.add(f);
+
+						f2 = new OBJFace(3,true,true);
+						OBJFace.indexBase = 1;
+						f2.setVertex(2, (2*i)+3, vertexToUV((2*i)+3,divisions, count>=wrap), vertexToNormal((2*i)+3));
+						f2.setVertex(1, (2*i)+2, vertexToUV((2*i)+2,divisions, count>=wrap), vertexToNormal((2*i)+2));
+						f2.setVertex(0, (2*i)+4, vertexToUV((2*i)+4,divisions, count>=wrap), vertexToNormal((2*i)+4));
+						outputMesh.faces.add(f2);
+
+						count++;
+
+					}
+				}
+						
+				f = new OBJFace(3,true,true);
+				OBJFace.indexBase = 1;
+				f.setVertex(2, (2*divisions)+1, vertexToUV((2*divisions)+1,divisions, true), vertexToNormal((2*divisions)+1));
+				f.setVertex(1, (2*divisions)+2, vertexToUV((2*divisions)+2,divisions, true), vertexToNormal((2*divisions)+2));
+				f.setVertex(0, 3, vertexToUV(3,divisions, false), vertexToNormal(3));
+				outputMesh.faces.add(f);
+
+				f2 = new OBJFace(3,true,true);
+				OBJFace.indexBase = 1;
+				f2.setVertex(2, 3, vertexToUV(3,divisions, false), vertexToNormal(3));
+				f2.setVertex(1, (2*divisions)+2, vertexToUV((2*divisions)+2,divisions, true), vertexToNormal((2*divisions)+2));
+				f2.setVertex(0, 4, vertexToUV(4,divisions, false), vertexToNormal(4));
+				outputMesh.faces.add(f2);
 
 		return outputMesh;
 	}
+	
+	//helper functions for cylinder
+	public static int vertexToUV (int vertexIndex, int n, boolean wrap){
+		if (!wrap) {
+			return vertexIndex + n*2;
+		}else{
+			return vertexIndex + n*2 + 2;
+		}
+	}
+	
+	public static int vertexToNormal (int vertexIndex){
+		if (vertexIndex % 2 == 0) {
+			return (vertexIndex-2)/2+2;
+		}else{
+			return (vertexIndex-1)/2+2;
+		}
+	}
+	
 	
 	/**
 	 * Generate the mesh for a sphere of radius 1, centered at the origin.  The sphere is triangulated
@@ -57,7 +238,96 @@ class MeshGen {
 		// Calculate Vertices (positions, uvs, and normals )
 		// Calculate indices in faces (use OBJFace class)
 		
+		float dist;
+		float y = 180f / divisionsV;
+		float degrees = 360.0f / divisionsU;
+		float radians = (float)Math.toRadians(-90);
+		float radians90 = (float)Math.toRadians(90);
+		float radians_incr = (float)Math.toRadians(degrees);
+		float y_incr = (float)Math.toRadians(y);
+		
+		// vertices & normals
+		outputMesh.positions.add(new Vector3(0,1,0));
+		outputMesh.normals.add(new Vector3(0,1,0));
+		for (int i = 1 ; i < divisionsV ; i++){
+			dist = (float)Math.sin(radians90-y_incr*i);
+			//latitudes
+			for (int j = 0 ; j < divisionsU; j++){
+				//longitudes
+				float x = (float)(Math.sqrt(1 - (Math.pow((dist), 2)) ) * Math.cos(radians + radians_incr * j));
+				float z = (float)(Math.sqrt(1 - (Math.pow((dist), 2)) ) * Math.sin(radians + radians_incr * j));
+				outputMesh.positions.add(new Vector3(x,dist,z));
+				outputMesh.normals.add(new Vector3(x,dist,z).normalize());
+			}
+		}
+		outputMesh.positions.add(new Vector3(0,-1,0));
+		outputMesh.normals.add(new Vector3(0,-1,0));
+		
+		// uv coordinates
+		for (float i = 0; i <= divisionsV ; i++){
+			for (float j = 0 ; j <= divisionsU; j++){
+				outputMesh.uvs.add(new Vector2(j/divisionsU, 1 - i/divisionsV));
+			}
+		}
+		
+		
+		// faces	
+		for (int i = 0; i < divisionsV; i++){
+			for (int j = 0; j < divisionsU; j++){
+				if (i==0){
+					// faces that connect to north pole
+					OBJFace f = new OBJFace (3, true, true);
+					f.indexBase = 0;
+					f.setVertex(2, 0, j+1, 0);
+					f.setVertex(1, j+1, j+1+divisionsU, j+1);
+					f.setVertex(0, constrict(j+2, divisionsU, 1), constrict2(j+2, divisionsU, 1, divisionsU)+divisionsU, constrict(j+2,divisionsU,1));
+					outputMesh.faces.add(f);
+				}else if (i==divisionsV-1){
+					// faces that connect to south pole
+					OBJFace f = new OBJFace (3, true, true);
+					f.indexBase = 0;
+					int last = divisionsU*(divisionsV-1)+1;
+					f.setVertex(2, last-0, 1, last-0);
+					f.setVertex(1, last-j-1, 1, last-j-1);
+					f.setVertex(0, last-constrict(j+2, divisionsU, 1), 1, last-constrict(j+2,divisionsU,1));
+					outputMesh.faces.add(f);
+				}else{
+					//2 triangles necessary
+					OBJFace f1 = new OBJFace (3, true, true);
+					f1.indexBase = 0;
+					f1.setVertex(0,divisionsU*(i-1)+(j+1),1,divisionsU*(i-1)+(j+1));
+					f1.setVertex(1,constrict(divisionsU*(i-1)+(j+2),i*divisionsU,(i-1)*divisionsU+1),1,constrict(divisionsU*(i-1)+(j+2),i*divisionsU,(i-1)*divisionsU+1));
+					f1.setVertex(2,divisionsU*(i-1)+(j+1)+divisionsU,1,divisionsU*(i-1)+(j+1)+divisionsU);
+					outputMesh.faces.add(f1);
+					OBJFace f2 = new OBJFace (3, true, true);
+					f2.indexBase = 0;
+					f2.setVertex(2,divisionsU*i+(j+1),1,divisionsU*i+(j+1));
+					f2.setVertex(1,constrict(divisionsU*i+(j+2),(i+1)*divisionsU,i*divisionsU+1),1,constrict(divisionsU*i+(j+2),(i+1)*divisionsU,i*divisionsU+1));
+					f2.setVertex(0,((j+1)%divisionsU)+((i-1)*divisionsU)+1,1,((j+1)%divisionsU)+((i-1)*divisionsU)+1);
+					outputMesh.faces.add(f2);
+				}
+				
+			}
+		}
+		
 		return outputMesh;
+	}
+	
+	//helper functions for sphere
+    public static int constrict(int i, int max, int ret){
+		if (i>max){
+			return ret;
+		}else{
+			return i;
+		}
+	}
+    
+    public static int constrict2(int i, int max, int ret, int n){
+		if (i>max){
+			return ret+n;
+		}else{
+			return i;
+		}
 	}
 	
 	
@@ -80,8 +350,40 @@ class MeshGen {
 		// Initialize output faces
 		// Calculate face normals, distribute to adjacent vertices
 		// Normalize new normals
-
+		    
+	    outputMesh.normals.clear();
+	    
+		for (int i = 0; i<outputMesh.positions.size() ; i++){
+			outputMesh.normals.add(new Vector3(0,0,0));
+		}
+		
+		for (OBJFace f : outputMesh.faces){
+			f.normals = new int[3];
+			f.normals[0] = f.positions[0];
+			f.normals[1] = f.positions[1];
+			f.normals[2] = f.positions[2];
+			Vector3 v = computeNormalofFace(f,outputMesh).normalize();		
+			for (int i : f.normals){
+//				outputMesh.normals.get(i).add(v).normalize();
+				outputMesh.normals.get(i).add(v);
+			}	
+		}
+		
+		for (Vector3 v : outputMesh.normals){
+			v.normalize();
+		}
+		
 		return outputMesh;
+	}
+	
+	public static Vector3 computeNormalofFace(OBJFace f, OBJMesh m){
+		Vector3[] v = new Vector3[3];
+		v[0] = m.getPosition(f, 0);
+		v[1] = m.getPosition(f, 1);
+		v[2] = m.getPosition(f, 2);
+		
+		Vector3 norm = (v[1].clone().sub(v[0])).cross((v[2].clone().sub(v[0])));
+		return norm.normalize();
 	}
 	
 	
