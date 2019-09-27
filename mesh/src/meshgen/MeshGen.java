@@ -351,29 +351,29 @@ class MeshGen {
 		// Calculate face normals, distribute to adjacent vertices
 		// Normalize new normals
 		    
-	    outputMesh.normals.clear();
+	    inputMesh.normals.clear();
 	    
-		for (int i = 0; i<outputMesh.positions.size() ; i++){
-			outputMesh.normals.add(new Vector3(0,0,0));
+		for (int i = 0; i<inputMesh.positions.size() ; i++){
+			inputMesh.normals.add(new Vector3(0,0,0));
 		}
 		
-		for (OBJFace f : outputMesh.faces){
+		for (OBJFace f : inputMesh.faces){
 			f.normals = new int[3];
 			f.normals[0] = f.positions[0];
 			f.normals[1] = f.positions[1];
 			f.normals[2] = f.positions[2];
-			Vector3 v = computeNormalofFace(f,outputMesh).normalize();		
+			Vector3 v = computeNormalofFace(f,inputMesh).normalize();		
 			for (int i : f.normals){
-//				outputMesh.normals.get(i).add(v).normalize();
-				outputMesh.normals.get(i).add(v);
+//				inputMesh.normals.get(i).add(v).normalize();
+				inputMesh.normals.get(i).add(v);
 			}	
 		}
 		
-		for (Vector3 v : outputMesh.normals){
+		for (Vector3 v : inputMesh.normals){
 			v.normalize();
 		}
 		
-		return outputMesh;
+		return inputMesh;
 	}
 	
 	public static Vector3 computeNormalofFace(OBJFace f, OBJMesh m){
