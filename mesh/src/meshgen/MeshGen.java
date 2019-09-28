@@ -1,6 +1,8 @@
 package meshgen;
 
 import java.io.IOException;
+import java.util.LinkedList;
+
 import math.Vector2;
 import math.Vector3;
 /**
@@ -256,6 +258,7 @@ class MeshGen {
 				//longitudes
 				float x = (float)(Math.sqrt(1 - (Math.pow((dist), 2)) ) * Math.cos(radians + radians_incr * j));
 				float z = (float)(Math.sqrt(1 - (Math.pow((dist), 2)) ) * Math.sin(radians + radians_incr * j));
+//				System.out.println("vertex " + ((i-1)*divisionsU + j + 1) + " has position : " + x + ", " + dist + ", " + z);
 				outputMesh.positions.add(new Vector3(x,dist,z));
 				outputMesh.normals.add(new Vector3(x,dist,z).normalize());
 			}
@@ -272,38 +275,77 @@ class MeshGen {
 		
 		
 		// faces	
+		LinkedList lst = createUVList(divisionsU, divisionsV);
+		
 		for (int i = 0; i < divisionsV; i++){
 			for (int j = 0; j < divisionsU; j++){
 				if (i==0){
 					// faces that connect to north pole
 					OBJFace f = new OBJFace (3, true, true);
 					f.indexBase = 0;
-					f.setVertex(2, 0, j+1, 0);
-					f.setVertex(1, j+1, j+1+divisionsU, j+1);
-					f.setVertex(0, constrict(j+2, divisionsU, 1), constrict2(j+2, divisionsU, 1, divisionsU)+divisionsU, constrict(j+2,divisionsU,1));
+//					f.setVertex(0, 0, j+1, 0);
+//					f.setVertex(2, j+1, j+1+divisionsU, j+1);
+//					f.setVertex(1, constrict(j+2, divisionsU, 1), constrict2(j+2, divisionsU, 1, divisionsU)+divisionsU, constrict(j+2,divisionsU,1));
+					int a = getNextUVIndex(lst,divisionsU);
+					int b = getNextUVIndex(lst,divisionsU);
+					int c = getNextUVIndex(lst,divisionsU);
+					f.setVertex(0, 0, a, 0);
+					f.setVertex(2, j+1, c, j+1);
+					f.setVertex(1, constrict(j+2, divisionsU, 1), b, constrict(j+2,divisionsU,1));
+//					System.out.println("north pole VERTEX: ");
+//					System.out.println(0 + ", " + (constrict(j+2, divisionsU, 1)) + ", " + (j+1)); 
+//					System.out.println("north pole UV: ");
+//					System.out.println(a + ", " + b + ", " + c); 
 					outputMesh.faces.add(f);
 				}else if (i==divisionsV-1){
 					// faces that connect to south pole
 					OBJFace f = new OBJFace (3, true, true);
 					f.indexBase = 0;
 					int last = divisionsU*(divisionsV-1)+1;
-					f.setVertex(2, last-0, 1, last-0);
-					f.setVertex(1, last-j-1, 1, last-j-1);
-					f.setVertex(0, last-constrict(j+2, divisionsU, 1), 1, last-constrict(j+2,divisionsU,1));
+//					f.setVertex(2, last-0, 1, last-0);
+//					f.setVertex(1, last-j-1, 1, last-j-1);
+//					f.setVertex(0, last-constrict(j+2, divisionsU, 1), 1, last-constrict(j+2,divisionsU,1));
+					f.setVertex(2, last-0, getNextUVIndex(lst,divisionsU), last-0);
+					f.setVertex(1, last-j-1, getNextUVIndex(lst,divisionsU), last-j-1);
+					f.setVertex(0, last-constrict(j+2, divisionsU, 1), getNextUVIndex(lst,divisionsU), last-constrict(j+2,divisionsU,1));
+//					System.out.println("south pole VERTEX: ");
+//					System.out.println((last-constrict(j+2, divisionsU, 1)) + ", " + (last-j-1) + ", " + last); 
 					outputMesh.faces.add(f);
 				}else{
 					//2 triangles necessary
 					OBJFace f1 = new OBJFace (3, true, true);
 					f1.indexBase = 0;
-					f1.setVertex(0,divisionsU*(i-1)+(j+1),1,divisionsU*(i-1)+(j+1));
-					f1.setVertex(1,constrict(divisionsU*(i-1)+(j+2),i*divisionsU,(i-1)*divisionsU+1),1,constrict(divisionsU*(i-1)+(j+2),i*divisionsU,(i-1)*divisionsU+1));
-					f1.setVertex(2,divisionsU*(i-1)+(j+1)+divisionsU,1,divisionsU*(i-1)+(j+1)+divisionsU);
+//					f1.setVertex(0,divisionsU*(i-1)+(j+1),1,divisionsU*(i-1)+(j+1));
+//					f1.setVertex(1,constrict(divisionsU*(i-1)+(j+2),i*divisionsU,(i-1)*divisionsU+1),1,constrict(divisionsU*(i-1)+(j+2),i*divisionsU,(i-1)*divisionsU+1));
+//					f1.setVertex(2,divisionsU*(i-1)+(j+1)+divisionsU,1,divisionsU*(i-1)+(j+1)+divisionsU);
+					int a = getNextUVIndex(lst,divisionsU);
+					int b = getNextUVIndex(lst,divisionsU);
+					int c = getNextUVIndex(lst,divisionsU);
+					f1.setVertex(0,divisionsU*(i-1)+(j+1),a,divisionsU*(i-1)+(j+1));
+					f1.setVertex(1,constrict(divisionsU*(i-1)+(j+2),i*divisionsU,(i-1)*divisionsU+1),b,constrict(divisionsU*(i-1)+(j+2),i*divisionsU,(i-1)*divisionsU+1));
+					f1.setVertex(2,divisionsU*(i-1)+(j+1)+divisionsU,c,divisionsU*(i-1)+(j+1)+divisionsU);
+//					System.out.println((divisionsU*(i-1)+(j+1)) + ", " + (constrict(divisionsU*(i-1)+(j+2),i*divisionsU,(i-1)*divisionsU+1)) + ", " + (divisionsU*(i-1)+(j+1)+divisionsU)); 
+//					System.out.println("UV");
+//					System.out.println(a + ", " + b + ", " + c); 
+//					System.out.println((divisionsU*(i-1)+(j+1)) + ", " + (constrict(divisionsU*(i-1)+(j+2),i*divisionsU,(i-1)*divisionsU+1)) + ", " + (divisionsU*(i-1)+(j+1)+divisionsU)); 
 					outputMesh.faces.add(f1);
+					
+					
 					OBJFace f2 = new OBJFace (3, true, true);
 					f2.indexBase = 0;
-					f2.setVertex(2,divisionsU*i+(j+1),1,divisionsU*i+(j+1));
-					f2.setVertex(1,constrict(divisionsU*i+(j+2),(i+1)*divisionsU,i*divisionsU+1),1,constrict(divisionsU*i+(j+2),(i+1)*divisionsU,i*divisionsU+1));
-					f2.setVertex(0,((j+1)%divisionsU)+((i-1)*divisionsU)+1,1,((j+1)%divisionsU)+((i-1)*divisionsU)+1);
+//					f2.setVertex(2,divisionsU*i+(j+1),1,divisionsU*i+(j+1));
+//					f2.setVertex(1,constrict(divisionsU*i+(j+2),(i+1)*divisionsU,i*divisionsU+1),1,constrict(divisionsU*i+(j+2),(i+1)*divisionsU,i*divisionsU+1));
+//					f2.setVertex(0,((j+1)%divisionsU)+((i-1)*divisionsU)+1,1,((j+1)%divisionsU)+((i-1)*divisionsU)+1);
+					int d = getNextUVIndex(lst,divisionsU);
+					int e = getNextUVIndex(lst,divisionsU);
+					int f = getNextUVIndex(lst,divisionsU);
+					f2.setVertex(2,divisionsU*i+(j+1),f,divisionsU*i+(j+1));
+					f2.setVertex(1,constrict(divisionsU*i+(j+2),(i+1)*divisionsU,i*divisionsU+1),e,constrict(divisionsU*i+(j+2),(i+1)*divisionsU,i*divisionsU+1));
+					f2.setVertex(0,((j+1)%divisionsU)+((i-1)*divisionsU)+1,d,((j+1)%divisionsU)+((i-1)*divisionsU)+1);
+//					System.out.println(((j+1)%divisionsU)+((i-1)*divisionsU)+1 + ", " + (constrict(divisionsU*i+(j+2),(i+1)*divisionsU,i*divisionsU+1)) + ", " + (divisionsU*i+(j+1))); 
+//					System.out.println("UV");
+//					System.out.println(d + ", " + e + ", " + f); 
+//					System.out.println((((j+1)%divisionsU)+((i-1)*divisionsU)+1) + ", " + (constrict(divisionsU*i+(j+2),(i+1)*divisionsU,i*divisionsU+1)) + ", " + (divisionsU*i+(j+1))); 
 					outputMesh.faces.add(f2);
 				}
 				
@@ -329,6 +371,58 @@ class MeshGen {
 			return i;
 		}
 	}
+    
+    public static LinkedList createUVList(int u, int v){
+    	LinkedList UVList = new LinkedList();
+        
+    	// north pole
+        for (int j = 0;j<u;j++){
+        	UVList.add(0);
+        	UVList.add(j+1);
+        	UVList.add(1);
+        	UVList.add(j+1);
+        	UVList.add(1);
+        	UVList.add(j);
+        }
+
+        // middle
+        for (int i = 1;i<=v-2;i++){
+        	for (int j = 0;j<u;j++){
+        		UVList.add(i);
+        		UVList.add(j);
+        		UVList.add(i);
+        		UVList.add(j+1);
+        		UVList.add(i+1);
+        		UVList.add(j);
+        		UVList.add(i);
+        		UVList.add(j+1);
+        		UVList.add(i+1);
+        		UVList.add(j+1);
+        		UVList.add(i+1);
+        		UVList.add(j);
+        	}
+        }
+            	
+       // south pole (wrong but whatever)
+        for (int j = 0;j<u;j++){
+        	UVList.add(v-2);
+        	UVList.add(j+1);
+        	UVList.add(v-2);
+        	UVList.add(j+1);
+        	UVList.add(v-1);
+        	UVList.add(j);
+        }
+        	
+    	return UVList;
+    }
+    
+    public static int UVindex (int u, int v, int divisionsU){
+    	return (divisionsU+1)*u+v;
+    }
+    
+    public static int getNextUVIndex(LinkedList l, int divisionsU){
+    	return UVindex((int)l.poll(),(int)l.poll(),divisionsU);
+    }
 	
 	
 	/**
