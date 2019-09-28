@@ -3,7 +3,7 @@ Authors: Pippen Wu (hw473), Benjamin Gillott (bg357)
 
 Current Issues:
 
-
+We are aware of some sphere UV mapping issues: The rotation of the globe is different from the provided reference, and the mapping at the very southern pole (where m = divisionsV) is wrong.
 
 
 Extra Credit:
