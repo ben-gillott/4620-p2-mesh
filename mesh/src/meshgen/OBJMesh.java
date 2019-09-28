@@ -1,6 +1,7 @@
 package meshgen;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.TreeSet;
 import java.util.Iterator;
 import java.io.BufferedReader;
@@ -8,6 +9,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import math.Vector2;
 import math.Vector3;
 
@@ -533,12 +536,49 @@ public class OBJMesh {
 	public static boolean advanceCompare(OBJMesh m1, OBJMesh m2, boolean verbose, float epsilon) {
 		
 		// Extra Credit: Advance Mesh Comparison (10pt)
-		// TODO:
 		// Reduce the complexity from \(O(n^2)\) to \(O(n \log n)\)
+		/*
+		 * This runs in roughly O(n) time, as it adds all faces of m1 to a hashmap (about n operations)
+		 * and then goes through each element of m2 (n times) and sees if it exists in the hash map removes it,
+		 * and if it doesn't exist, the function fails.
+		 * 
+		 * Runtime analyis:
+		 * both the origninal and advance were run twice - on a small set and on a large set (times were averaged).
+		 * (time is in units of million nanoseconds)
+		 * Original: t1 = 8 -> t2 = 216
+		 * advance : t1 = 4 -> t2 = 20
+		 * 
+		 * From this it is definitely increasing at a slower rate, likely O(n) down from O(n^2)
+		 */
 		
+		if (m1.faces.size() != m2.faces.size()) {
+			return false;
+		}
+		
+		HashMap<String, Boolean> faces1 = new HashMap<>();
+		
+		
+		for(OBJFace f : m1.faces) {
+			faces1.put(stringOfFace(f), true);
+		}
+		for(int i = 0; i < m2.faces.size(); i++) {
+			if (!faces1.containsKey(stringOfFace(m2.faces.get(i)))) {//  &&  (compareFaces(m1, m1.faces.get(i), m2, m2.faces.get(i), epsilon) == CompareFacesResult.Mismatch)) {
+				return false;
+			}else {
+				//Remove from array
+				faces1.remove(stringOfFace(m2.faces.get(i)));
+			}
+		}
 		return true;
+		
 	}
-	
+	public static String stringOfFace(OBJFace f) {
+		String a = Arrays.toString(f.positions);
+		String b = Arrays.toString(f.uvs);
+		String c = Arrays.toString(f.normals);
+		
+		return a+b+c;
+	}
 	
 	/**
 	 * Returns true if two OBJMeshes are equivalent.
@@ -741,4 +781,7 @@ public class OBJMesh {
 		}
 		return CompareFacesResult.Mismatch; // No match.
 	}
+	
+	
 }
+

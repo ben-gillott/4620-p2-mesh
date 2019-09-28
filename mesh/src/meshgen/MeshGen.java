@@ -672,8 +672,14 @@ class MeshGen {
 				System.err.println(e);
 				System.exit(1);
 			}
-			System.out.println("Meshes are equivalent: " + OBJMesh.compare(m1, m2, true, eps));
-
+//			long startTime = System.nanoTime();
+			System.out.println("Meshes are equivalent: " + OBJMesh.compare(m1, m2, true, eps));//TODO advanced testing
+//			long endTime = System.nanoTime();
+			
+//			long duration = (endTime - startTime);
+//			System.out.println("Compare ran in : " + duration);
+			
+			
 		} else {
 			System.err.println("Error: Unknown option \"" + args[0] + "\".");
 			printUsage();
